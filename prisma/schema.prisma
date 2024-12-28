@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = []
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String      @id @default(cuid())
+  email     String      @unique
+  password  String
+  name      String
+  role      Role        @default(OPERATOR)
+  createdAt DateTime    @default(now())
+  operations Operation[]
+}
+
+model Operation {
+  id        String   @id @default(cuid())
+  type      OpType
+  amount    Decimal  @db.Decimal(10,2)
+  currency  String
+  rate      Decimal  @db.Decimal(10,4)
+  profit    Decimal  @db.Decimal(10,2)
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+enum OpType {
+  SALE
+  EXCHANGE
+}
