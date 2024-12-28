@@ -5,7 +5,6 @@
 
     function handleOperationSelect(type: OperationType) {
         if (!operationsConfig[type].isEnabled) {
-            // TODO: Implementar sistema de notificaciones
             alert('Esta función estará disponible próximamente');
             return;
         }
@@ -13,34 +12,50 @@
     }
 </script>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     {#each Object.entries(operationsConfig) as [type, config]}
         <div 
-            class="relative bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-6 cursor-pointer border border-gray-200"
-            class:opacity-75={!config.isEnabled}
-            class:cursor-not-allowed={!config.isEnabled}
+            class="relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl 
+                   {config.isEnabled ? 'cursor-pointer hover:scale-105' : 'opacity-90'}"
             on:click={() => handleOperationSelect(type as OperationType)}
             on:keydown={(e) => e.key === 'Enter' && handleOperationSelect(type as OperationType)}
             role="button"
             tabindex="0"
         >
-            <div class="flex items-start space-x-4">
-                <div class="text-3xl">{config.icon}</div>
-                <div class="flex-1">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        {config.title}
-                    </h3>
-                    <p class="mt-1 text-sm text-gray-500">
-                        {config.description}
-                    </p>
+            <div class="bg-gradient-to-br {config.gradientColors} p-6">
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-full p-3 {config.bgColor} bg-opacity-90">
+                            <svg class="h-6 w-6 text-white" 
+                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {@html config.icon}
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold text-white mb-2">
+                            {config.title}
+                        </h3>
+                        <p class="text-white text-opacity-90">
+                            {config.description}
+                        </p>
+                        {#if config.isEnabled}
+                            <div class="mt-4">
+                                <span class="inline-flex items-center text-sm font-medium text-white">
+                                    Iniciar operación
+                                    <svg class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </span>
+                            </div>
+                        {:else}
+                            <div class="absolute top-4 right-4 bg-white bg-opacity-90 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
+                                Próximamente
+                            </div>
+                        {/if}
+                    </div>
                 </div>
             </div>
-
-            {#if !config.isEnabled}
-                <div class="absolute top-4 right-4 bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium">
-                    Próximamente
-                </div>
-            {/if}
         </div>
     {/each}
 </div>
