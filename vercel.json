@@ -2,5 +2,13 @@
     "buildCommand": "npm run build",
     "devCommand": "npm run dev",
     "installCommand": "npm install",
-    "framework": "sveltekit"
-  } 
+    "framework": "sveltekit",
+    "git": {
+        "deploymentEnabled": {
+            "main": true,
+            "feature/*": true
+        }
+    },
+    "ignoreCommand": "git diff --quiet HEAD^ HEAD ./",
+    "public": false
+} 
