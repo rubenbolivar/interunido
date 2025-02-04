@@ -1,5 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
-import { OperationType } from '../operations/types';
+import type { OperationType, StageValidation, OperationState } from '$lib/operations/types';
 
 // Tipos de validación para los stages
 interface StageValidation {
@@ -27,6 +27,22 @@ export const operationStore = writable<OperationState>({
         errors: []
     }
 });
+
+// Configuración de operaciones
+export const operationsConfig = [
+    {
+        type: OperationType.SALE,
+        title: 'Venta de Divisas',
+        description: 'Realizar una venta de divisas',
+        icon: 'dollar-sign'
+    },
+    {
+        type: OperationType.SWAP,
+        title: 'Intercambio',
+        description: 'Realizar un intercambio de divisas',
+        icon: 'refresh'
+    }
+] as const;
 
 // Acciones del store
 export const operationActions = {
