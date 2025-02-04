@@ -3,6 +3,7 @@
     import { operationStore } from '$lib/stores/operations';
     import Chart from 'chart.js/auto';
     import { onMount } from 'svelte';
+    import OperationSelector from '$lib/components/OperationSelector.svelte';
     
     let operationsChartCanvas: HTMLCanvasElement;
     let volumeChartCanvas: HTMLCanvasElement;
@@ -37,6 +38,14 @@
 </script>
 
 <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+    
+    <!-- Selector de Operaciones -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-4">Operaciones Disponibles</h2>
+        <OperationSelector />
+    </div>
+
     <DashboardStats />
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
