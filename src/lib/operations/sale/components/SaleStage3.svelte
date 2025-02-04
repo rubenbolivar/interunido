@@ -1,7 +1,7 @@
 <script lang="ts">
     import { operationStore, operationActions } from '$lib/stores/operations';
     import { OperationFactory } from '$lib/operations/base/OperationFactory';
-    import { OperationType } from '$lib/operations/types';
+    import type { OperationType } from '$lib/operations/types';
     
     let loading = false;
     let error = '';
