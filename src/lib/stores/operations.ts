@@ -1,13 +1,15 @@
-import { writable, derived } from 'svelte/store';
-import { OperationType } from '$lib/operations/types';
-import type { StageValidation, BaseOperationConfig } from '$lib/operations/types';
+import { writable } from 'svelte/store';
+import type { BaseOperationConfig, StageValidation, Transaction, OperationType } from '$lib/operations/types';
 
 // Definir la interfaz OperationState localmente
 interface OperationState {
     currentStage: number;
-    data: Record<string, any>;
-    type: OperationType;
-    validation: StageValidation;
+    operationType: OperationType | null;
+    amountToSell: number;
+    clientRate: number;
+    clientName: string;
+    currencyType: string;
+    transactions: Transaction[];
 }
 
 // Configuración de operaciones
@@ -30,51 +32,45 @@ export const operationsConfig: BaseOperationConfig[] = [
 
 // Estado de la operación actual
 const createOperationStore = () => {
+    const initialState: OperationState = {
+        currentStage: 1,
+        operationType: null,
+        amountToSell: 0,
+        clientRate: 0,
+        clientName: '',
+        currencyType: '',
+        transactions: []
+    };
+
     const { subscribe, set, update } = writable<OperationState | null>(null);
+
+    const startOperation = (operationType: OperationType) => {
+        set({ ...initialState, operationType });
+    };
 
     return {
         subscribe,
-        startOperation: (type: OperationType) => {
-            set({
-                currentStage: 1,
-                data: {},
-                type,
-                validation: { isValid: false, errors: [] }
-            });
-        },
+        startOperation,
         updateOperationData: (data: Record<string, any>) => {
             update(state => {
                 if (!state) return state;
-                return {
-                    ...state,
-                    data: { ...state.data, ...data }
-                };
+                return { ...state, ...data };
             });
         },
         validateStage: (data: Record<string, any>) => {
-            // Implementar lógica de validación según los datos
-            const isValid = data.clientName && data.clientId;
-            return { 
-                isValid, 
-                errors: isValid ? [] : ['Datos del cliente incompletos'] 
-            };
+            // Implementación de validación
+            return { isValid: true, errors: [] } as StageValidation;
         },
         updateStageValidation: (validation: StageValidation) => {
             update(state => {
                 if (!state) return state;
-                return {
-                    ...state,
-                    validation
-                };
+                return { ...state, validation };
             });
         },
         nextStage: () => {
             update(state => {
                 if (!state) return state;
-                return {
-                    ...state,
-                    currentStage: state.currentStage + 1
-                };
+                return { ...state, currentStage: state.currentStage + 1 };
             });
         },
         reset: () => set(null)

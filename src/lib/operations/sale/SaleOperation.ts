@@ -1,55 +1,140 @@
 import { BaseOperation } from '../base/BaseOperation';
 import type { BaseOperationConfig, OperationResult, Transaction } from '../types';
-import { OperationType } from '../types';
+import type { OperationType } from '../types';
 
 interface SaleData {
-    amount: number;
-    currency: string;
-    clientRate: number;
     clientName: string;
-    clientId: string;
+    amount: number;
+    currencyType: string;
+    clientRate: number;
 }
 
 export class SaleOperation extends BaseOperation {
-    private data: SaleData | null = null;
+    protected transactions: Transaction[] = [];
+    protected operationData: SaleData | null = null;
 
     constructor() {
         const config: BaseOperationConfig = {
-            type: OperationType.SALE,
-            isEnabled: true,
             title: 'Venta de Divisas',
             description: 'Gestionar operaciones de venta de divisas',
             icon: '💱',
-            maxStages: 3
+            maxStages: 3,
+            isEnabled: true
         };
         super(config);
     }
 
-    setData(data: SaleData) {
-        this.data = data;
+    validate(): OperationResult {
+        const stage = this.getCurrentStage();
+        const data = this.getData();
+        
+        switch(stage) {
+            case 1:
+                return this.validateStage1(data as SaleData);
+            case 2:
+                return this.validateStage2(data as Transaction);
+            case 3:
+                return this.validateStage3(data);
+            default:
+                return {
+                    success: false,
+                    message: 'Etapa inválida'
+                };
+        }
     }
 
-    validate(): OperationResult {
-        if (!this.data) {
+    setData(data: Record<string, any>): void {
+        if (this.getCurrentStage() === 1) {
+            this.operationData = data as SaleData;
+        } else if (this.getCurrentStage() === 2) {
+            this.transactions.push(data as Transaction);
+        }
+    }
+
+    getData(): Record<string, any> {
+        switch(this.getCurrentStage()) {
+            case 1:
+                return this.operationData || {};
+            case 2:
+                return this.transactions;
+            default:
+                return {};
+        }
+    }
+
+    protected validateStage1(data: SaleData): OperationResult {
+        if (!data.clientName) {
             return {
                 success: false,
-                data: null,
-                error: 'No hay datos para validar'
+                message: 'El nombre del cliente es requerido'
             };
         }
 
-        if (this.data.amount <= 0) {
+        if (!data.amount || data.amount <= 0) {
             return {
                 success: false,
-                data: null,
-                error: 'El monto debe ser mayor a 0'
+                message: 'El monto debe ser mayor a 0'
+            };
+        }
+
+        if (!data.currencyType) {
+            return {
+                success: false,
+                message: 'Debe seleccionar un tipo de divisa'
             };
         }
 
         return {
             success: true,
-            data: this.data
+            message: 'Datos válidos',
+            data
         };
+    }
+
+    protected validateStage2(transaction: Transaction): OperationResult {
+        if (!transaction.operatorName) {
+            return {
+                success: false,
+                message: 'El nombre del operador es requerido'
+            };
+        }
+
+        const transactionId = this.transactions.length + 1;
+        transaction.id = transactionId;
+
+        const totalAmount = this.transactions.reduce((sum: number, t: Transaction) => sum + t.amount, 0) + transaction.amount;
+
+        if (totalAmount > (this.operationData?.amount || 0)) {
+            return {
+                success: false,
+                message: 'El monto total excede el monto a vender'
+            };
+        }
+
+        return {
+            success: true,
+            message: 'Transacción válida',
+            data: { transaction, totalAmount }
+        };
+    }
+
+    protected validateStage3(data: any): OperationResult {
+        try {
+            return {
+                success: true,
+                message: 'Operación completada',
+                data
+            };
+        } catch (err) {
+            return {
+                success: false,
+                message: err instanceof Error ? err.message : 'Error desconocido'
+            };
+        }
+    }
+
+    protected getCurrentStage(): number {
+        return 1; // TODO: Implementar lógica real
     }
 
     calculate(): OperationResult {
@@ -64,7 +149,7 @@ export class SaleOperation extends BaseOperation {
         const transaction: Transaction = {
             id: crypto.randomUUID(),
             amount: this.data.amount,
-            currency: this.data.currency,
+            currency: this.data.currencyType,
             rate: this.data.clientRate,
             timestamp: new Date()
         };

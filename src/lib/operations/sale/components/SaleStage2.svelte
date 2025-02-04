@@ -1,95 +1,74 @@
 <script lang="ts">
     import { operationStore, operationActions } from '$lib/stores/operations';
+    import TransactionForm from './TransactionForm.svelte';
+    import type { Transaction } from '$lib/operations/types';
     
-    let amount = 0;
-    let currency = 'USD';
-    let clientRate = 0;
-    let error = '';
-
-    const currencies = [
-        { value: 'USD', label: 'Dólares Americanos' },
-        { value: 'EUR', label: 'Euros' }
-    ];
-
-    function handleNext() {
-        if (amount <= 0 || !currency || clientRate <= 0) {
-            error = 'Por favor complete todos los campos correctamente';
-            return;
-        }
-
-        operationActions.updateData({ amount, currency, clientRate });
-        operationActions.nextStage();
-    }
-
-    function handlePrevious() {
-        operationActions.previousStage();
-    }
+    $: transactions = $operationStore?.transactions || [];
+    $: totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
+    $: remainingAmount = ($operationStore?.amountToSell || 0) - totalAmount;
 </script>
 
-<div class="p-6 bg-white rounded-lg shadow">
-    <h2 class="text-2xl font-semibold mb-6">Detalles de la Operación</h2>
-    
-    <div class="space-y-4">
-        <div>
-            <label for="amount" class="block text-sm font-medium text-gray-700">
-                Monto
-            </label>
-            <input
-                type="number"
-                id="amount"
-                bind:value={amount}
-                min="0"
-                step="0.01"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-        </div>
-
-        <div>
-            <label for="currency" class="block text-sm font-medium text-gray-700">
-                Moneda
-            </label>
-            <select
-                id="currency"
-                bind:value={currency}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-                {#each currencies as curr}
-                    <option value={curr.value}>{curr.label}</option>
-                {/each}
-            </select>
-        </div>
-
-        <div>
-            <label for="clientRate" class="block text-sm font-medium text-gray-700">
-                Tasa del Cliente
-            </label>
-            <input
-                type="number"
-                id="clientRate"
-                bind:value={clientRate}
-                min="0"
-                step="0.0001"
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-        </div>
-
-        {#if error}
-            <p class="text-red-500 text-sm">{error}</p>
-        {/if}
-
-        <div class="flex justify-between mt-6">
-            <button
-                on:click={handlePrevious}
-                class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
-            >
-                Anterior
-            </button>
-            <button
-                on:click={handleNext}
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-                Siguiente
-            </button>
+<div class="space-y-6">
+    <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+        <div class="md:grid md:grid-cols-3 md:gap-6">
+            <div class="md:col-span-1">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">Transacciones</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    Agregue las transacciones necesarias para completar la venta.
+                </p>
+                <div class="mt-4 space-y-2">
+                    <p class="text-sm text-gray-500">
+                        Monto total a vender: ${$operationStore?.amountToSell || 0}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        Monto restante: ${remainingAmount}
+                    </p>
+                </div>
+            </div>
+            <div class="mt-5 md:mt-0 md:col-span-2">
+                <TransactionForm />
+            </div>
         </div>
     </div>
+
+    {#if transactions.length > 0}
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul role="list" class="divide-y divide-gray-200">
+                {#each transactions as transaction}
+                    <li>
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium text-indigo-600 truncate">
+                                    {transaction.operatorName}
+                                </p>
+                                <div class="ml-2 flex-shrink-0 flex">
+                                    <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        ${transaction.amount}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-2 sm:flex sm:justify-between">
+                                <div class="sm:flex">
+                                    <p class="flex items-center text-sm text-gray-500">
+                                        Tasa: {transaction.rate}
+                                    </p>
+                                    <p class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
+                                        Comisión: {transaction.bankCommission}
+                                    </p>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                    <p>
+                                        Oficinas: {Object.entries(transaction.offices)
+                                            .filter(([_, value]) => value)
+                                            .map(([key]) => key)
+                                            .join(', ')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                {/each}
+            </ul>
+        </div>
+    {/if}
 </div>
