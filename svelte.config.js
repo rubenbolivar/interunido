@@ -8,6 +8,9 @@ const config = {
 		env: {
 			dir: process.cwd(),
 			publicPrefix: 'PUBLIC_'
+		},
+		alias: {
+			$lib: './src/lib'
 		}
 	},
 	preprocess: vitePreprocess()
