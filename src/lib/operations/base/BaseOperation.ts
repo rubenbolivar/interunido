@@ -1,15 +1,27 @@
 import type { BaseOperationConfig, OperationResult, Transaction } from '../types';
 
-export abstract class BaseOperation {
+export abstract class BaseOperation<T = any> {
     protected transactions: Transaction[] = [];
+    protected data: T | null = null;
+    private config: BaseOperationConfig;
     
-    protected constructor(protected config: BaseOperationConfig) {}
+    constructor(config: BaseOperationConfig) {
+        this.config = config;
+    }
+
+    getConfig(): BaseOperationConfig {
+        return this.config;
+    }
 
     abstract validate(): OperationResult;
     abstract calculate(): OperationResult;
     abstract save(): Promise<OperationResult>;
-    abstract setData(data: Record<string, any>): void;
+    abstract setData(data: T): void;
     
+    getData(): T | null {
+        return this.data;
+    }
+
     getMetadata() {
         return {
             title: this.config.title,
@@ -30,4 +42,6 @@ export abstract class BaseOperation {
     protected addTransaction(transaction: Transaction) {
         this.transactions.push(transaction);
     }
+
+    abstract validateStage(stage: number): OperationResult;
 }
