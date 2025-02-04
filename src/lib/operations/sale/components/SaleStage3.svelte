@@ -1,14 +1,16 @@
 <script lang="ts">
-    import { operationStore, operationActions } from '$lib/stores/operations';
+    import { operationStore, type OperationActions } from '$lib/stores/operations';
     import { OperationFactory } from '$lib/operations/base/OperationFactory';
     import type { OperationType } from '$lib/operations/types';
+    
+    const actions: OperationActions = operationStore;
     
     let loading = false;
     let error = '';
     let success = false;
 
-    $: operationData = $operationStore.data;
-    $: totalAmount = operationData.amount * operationData.clientRate;
+    $: transactionData = $operationStore?.data || {};
+    $: totalAmount = transactionData.amount * transactionData.clientRate;
 
     async function handleConfirm() {
         loading = true;
@@ -16,7 +18,7 @@
         
         try {
             const operation = OperationFactory.createOperation(OperationType.SALE);
-            operation.setData(operationData);
+            operation.setData(transactionData);
             
             const validationResult = operation.validate();
             if (!validationResult.success) {
@@ -42,11 +44,11 @@
     }
 
     function handlePrevious() {
-        operationActions.previousStage();
+        actions.previousStage();
     }
 
     function handleFinish() {
-        operationActions.resetOperation();
+        actions.resetOperation();
     }
 </script>
 
@@ -60,19 +62,19 @@
                 <dl class="mt-4 space-y-2">
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Cliente:</dt>
-                        <dd class="font-medium">{operationData.clientName}</dd>
+                        <dd class="font-medium">{transactionData.clientName}</dd>
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Identificación:</dt>
-                        <dd class="font-medium">{operationData.clientId}</dd>
+                        <dd class="font-medium">{transactionData.clientId}</dd>
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Monto:</dt>
-                        <dd class="font-medium">{operationData.amount} {operationData.currency}</dd>
+                        <dd class="font-medium">{transactionData.amount} {transactionData.currency}</dd>
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Tasa:</dt>
-                        <dd class="font-medium">{operationData.clientRate}</dd>
+                        <dd class="font-medium">{transactionData.clientRate}</dd>
                     </div>
                     <div class="flex justify-between text-lg font-semibold">
                         <dt>Total:</dt>

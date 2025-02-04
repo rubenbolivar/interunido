@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { BaseOperationConfig, StageValidation, Transaction, OperationType } from '$lib/operations/types';
+import type { BaseOperationConfig, StageValidation, Transaction, OperationType, OperationState } from '$lib/operations/types';
 
 // Definir la interfaz OperationState localmente
 interface OperationState {
@@ -29,6 +29,19 @@ export const operationsConfig: BaseOperationConfig[] = [
         icon: 'refresh-cw',
     }
 ];
+
+export interface OperationActions {
+    startOperation: (operationType: OperationType) => void;
+    updateOperationData: (data: Record<string, any>) => void;
+    validateStage: (data: Record<string, any>) => StageValidation;
+    updateStageValidation: (validation: StageValidation) => void;
+    nextStage: () => void;
+    previousStage: () => void;
+    resetOperation: () => void;
+    reset: () => void;
+}
+
+export const operationStore = writable<OperationState | null>(null);
 
 // Estado de la operación actual
 const createOperationStore = () => {
@@ -73,18 +86,27 @@ const createOperationStore = () => {
                 return { ...state, currentStage: state.currentStage + 1 };
             });
         },
+        previousStage: () => {
+            update(state => {
+                if (!state) return state;
+                return { ...state, currentStage: state.currentStage - 1 };
+            });
+        },
+        resetOperation: () => {
+            set(null);
+        },
         reset: () => set(null)
     };
 };
 
-export const operationStore = createOperationStore();
-
-// Acciones de operación
-export const operationActions = {
-    startOperation: operationStore.startOperation,
-    updateOperationData: operationStore.updateOperationData,
-    validateStage: operationStore.validateStage,
-    updateStageValidation: operationStore.updateStageValidation,
-    nextStage: operationStore.nextStage,
-    reset: operationStore.reset
+// Crear las acciones del store
+export const operationActions: OperationActions = {
+    startOperation: (type) => {
+        operationStore.set({
+            type,
+            data: {},
+            currentStage: 1
+        });
+    },
+    // ... resto de las implementaciones
 }; 

@@ -3,12 +3,13 @@
     import { OperationFactory } from '$lib/operations/base/OperationFactory';
     import type { OperationType } from '$lib/operations/types';
     
+    // Asegurarse de que operationStore no sea null antes de acceder a data
+    $: swapData = $operationStore?.data || {};
+    
     let loading = false;
     let error = '';
     let success = false;
 
-    $: operationData = $operationStore.data;
-    
     // Definimos un tipo para las tasas de cambio
     type ExchangeRatePair = 'USD-EUR' | 'EUR-USD';
     
@@ -24,8 +25,8 @@
         return exchangeRates[pair] || 0;
     }
 
-    $: exchangeRate = getExchangeRate(operationData.fromCurrency, operationData.toCurrency);
-    $: estimatedAmount = operationData.fromAmount * exchangeRate;
+    $: exchangeRate = getExchangeRate(swapData.sourceCurrency, swapData.targetCurrency);
+    $: estimatedAmount = swapData.amount * exchangeRate;
 
     async function handleConfirm() {
         loading = true;
@@ -34,7 +35,7 @@
         try {
             const operation = OperationFactory.createOperation(OperationType.SWAP);
             operation.setData({
-                ...operationData,
+                ...swapData,
                 exchangeRate,
                 estimatedAmount
             });
@@ -66,6 +67,23 @@
     }
 </script>
 
+{#if $operationStore}
+    <div class="swap-results">
+        <h2>Resultados del Intercambio</h2>
+        <div class="details">
+            <p>Monto: {swapData.amount}</p>
+            <p>Moneda Origen: {swapData.sourceCurrency}</p>
+            <p>Moneda Destino: {swapData.targetCurrency}</p>
+            <!-- otros detalles -->
+        </div>
+    </div>
+
+    <div class="actions">
+        <button on:click={() => operationActions.previousStage()}>Anterior</button>
+        <button on:click={() => operationActions.resetOperation()}>Nueva Operación</button>
+    </div>
+{/if}
+
 <div class="p-6 bg-white rounded-lg shadow">
     <h2 class="text-2xl font-semibold mb-6">Confirmar Canje</h2>
     
@@ -76,15 +94,15 @@
                 <dl class="mt-4 space-y-2">
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Cliente:</dt>
-                        <dd class="font-medium">{operationData.clientName}</dd>
+                        <dd class="font-medium">{swapData.clientName}</dd>
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Identificación:</dt>
-                        <dd class="font-medium">{operationData.clientId}</dd>
+                        <dd class="font-medium">{swapData.clientId}</dd>
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Monto a Canjear:</dt>
-                        <dd class="font-medium">{operationData.fromAmount} {operationData.fromCurrency}</dd>
+                        <dd class="font-medium">{swapData.amount} {swapData.sourceCurrency}</dd>
                     </div>
                     <div class="flex justify-between">
                         <dt class="text-gray-600">Tasa de Cambio:</dt>
@@ -92,7 +110,7 @@
                     </div>
                     <div class="flex justify-between text-lg font-semibold">
                         <dt>Monto Estimado:</dt>
-                        <dd>{estimatedAmount.toFixed(2)} {operationData.toCurrency}</dd>
+                        <dd>{estimatedAmount.toFixed(2)} {swapData.targetCurrency}</dd>
                     </div>
                 </dl>
             </div>
