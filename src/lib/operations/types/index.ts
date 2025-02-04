@@ -1,3 +1,5 @@
+export type OperationType = 'sale' | 'purchase' | 'swap';
+
 export interface BaseOperationConfig {
     maxStages: number;
     title: string;
@@ -16,8 +18,6 @@ export interface OperationState {
     currencyType: string;
     transactions: Transaction[];
 }
-
-export type OperationType = 'sale' | 'purchase' | 'swap';
 
 export interface OperationResult {
     success: boolean;
