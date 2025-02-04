@@ -13,7 +13,7 @@
         const amount = unformatNumber(amountToSell);
         const rate = unformatNumber(clientRate);
         const result = amount * rate;
-        amountClientReceives = !isNaN(result) ? formatNumber(result) : '';
+        amountClientReceives = !isNaN(result) ? `Bs. ${formatNumber(result)}` : '';
     }
 
     function handleSubmit() {
@@ -27,7 +27,7 @@
             amountToSell: unformatNumber(amountToSell),
             currencyType,
             clientRate: unformatNumber(clientRate),
-            amountClientReceives: unformatNumber(amountClientReceives)
+            amountClientReceives: unformatNumber(amountClientReceives.replace('Bs. ', ''))
         });
 
         operationActions.nextStage();
