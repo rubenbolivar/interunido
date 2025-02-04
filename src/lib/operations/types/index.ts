@@ -1,13 +1,21 @@
 export enum OperationType {
-    SALE = 'sale',
-    SWAP = 'swap'
+    SALE = 'SALE',
+    SWAP = 'SWAP'
 }
 
+// Tipos de validación para los stages
+export interface StageValidation {
+    isValid: boolean;
+    errors: string[];
+}
+
+// Definir la interfaz OperationState
 export interface OperationState {
     currentOperation: OperationType | null;
     isOperationInProgress: boolean;
     currentStage: number;
     data: Record<string, any>;
+    validation: StageValidation;
 }
 
 export interface BaseOperationConfig {
