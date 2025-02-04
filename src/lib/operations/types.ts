@@ -1,10 +1,11 @@
-// Tipos de operaciones disponibles
+// Definir como enum o const object para poder usarlo como valor
 export const OperationType = {
-    SALE: 'sale',
-    SWAP: 'swap'
-} as const;
+    SALE: 'sale' as const,
+    SWAP: 'swap' as const
+};
 
-export type OperationType = typeof OperationType[keyof typeof OperationType];
+// Tipo derivado del objeto
+export type OperationTypeValue = typeof OperationType[keyof typeof OperationType];
 
 // Tipo para transacciones
 export interface Transaction {
@@ -21,7 +22,7 @@ export interface Transaction {
 
 // Tipo para el estado de la operación
 export interface OperationState {
-    type: OperationType;
-    data: Transaction;
+    type: OperationTypeValue;
+    data: Record<string, any>;
     currentStage: number;
 } 
