@@ -2,56 +2,121 @@
     import { operationStore, operationActions } from '$lib/stores/operations';
     
     let clientName = '';
-    let clientId = '';
+    let amountToSell = '';
+    let currencyType = '';
+    let clientRate = '';
+    let amountClientReceives = '';
 
-    $: validation = operationActions.validateStage({ clientName, clientId });
-    $: if ($operationStore) {
-        operationActions.updateStageValidation(validation);
+    // Calcular el monto que recibe el cliente cuando cambian los valores
+    $: {
+        const amount = parseFloat(amountToSell) || 0;
+        const rate = parseFloat(clientRate) || 0;
+        amountClientReceives = formatNumber(amount * rate, true);
+    }
+
+    function formatNumber(num: number, isBs = false): string {
+        if (typeof num !== 'number') return '';
+        const formattedNum = num.toLocaleString('de-DE', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+        });
+        return isBs ? `Bs. ${formattedNum}` : formattedNum;
     }
 
     function handleSubmit() {
-        operationActions.updateOperationData({ clientName, clientId });
-        if (validation.isValid) {
-            operationActions.nextStage();
+        if (!clientName || !amountToSell || !currencyType || !clientRate) {
+            alert('Por favor, complete todos los campos requeridos.');
+            return;
         }
+
+        operationActions.updateOperationData({
+            clientName,
+            amountToSell: parseFloat(amountToSell),
+            currencyType,
+            clientRate: parseFloat(clientRate),
+            amountClientReceives: parseFloat(amountToSell) * parseFloat(clientRate)
+        });
+
+        operationActions.nextStage();
     }
 </script>
 
-<div class="p-6 bg-white rounded-lg shadow">
-    <h2 class="text-2xl font-semibold mb-6">Información del Cliente</h2>
-    
+<div class="card">
+    <h2 class="text-xl font-bold mb-4">Datos de la Operación</h2>
     <form on:submit|preventDefault={handleSubmit} class="space-y-6">
-        <div>
+        <div class="form-group">
             <label for="clientName" class="block text-sm font-medium text-gray-700">
-                Nombre del Cliente
+                Nombre del Cliente:
             </label>
             <input
                 type="text"
                 id="clientName"
                 bind:value={clientName}
+                required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
         </div>
 
-        <div>
-            <label for="clientId" class="block text-sm font-medium text-gray-700">
-                Identificación
+        <div class="form-group">
+            <label for="amountToSell" class="block text-sm font-medium text-gray-700">
+                Monto que desea vender:
+            </label>
+            <input
+                type="number"
+                id="amountToSell"
+                bind:value={amountToSell}
+                step="any"
+                required
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+        </div>
+
+        <div class="form-group">
+            <label for="currencyType" class="block text-sm font-medium text-gray-700">
+                Tipo de Divisa:
+            </label>
+            <select
+                id="currencyType"
+                bind:value={currencyType}
+                required
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            >
+                <option value="">Seleccione una opción</option>
+                <option value="EUR_CASH">Euros en efectivo</option>
+                <option value="EUR_TRANSFER">Euro transferencia</option>
+                <option value="USD_CASH">Dólares en efectivo</option>
+                <option value="USD_ZELLE">Dólares Zelle</option>
+                <option value="USD_INTL">Dólares en Bancos internacionales</option>
+                <option value="USDT">Binance USDT</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="clientRate" class="block text-sm font-medium text-gray-700">
+                Tasa Cliente:
+            </label>
+            <input
+                type="number"
+                id="clientRate"
+                bind:value={clientRate}
+                step="any"
+                required
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            />
+        </div>
+
+        <div class="form-group">
+            <label for="amountClientReceives" class="block text-sm font-medium text-gray-700">
+                Monto que debe recibir el cliente:
             </label>
             <input
                 type="text"
-                id="clientId"
-                bind:value={clientId}
-                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                id="amountClientReceives"
+                value={amountClientReceives}
+                readonly
+                class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm sm:text-sm"
             />
         </div>
-
-        {#if validation.errors.length > 0}
-            <div class="text-red-500 text-sm">
-                {#each validation.errors as error}
-                    <p>{error}</p>
-                {/each}
-            </div>
-        {/if}
 
         <div class="flex justify-end">
             <button
