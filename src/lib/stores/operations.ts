@@ -1,6 +1,14 @@
 import { writable, derived } from 'svelte/store';
 import { OperationType } from '$lib/operations/types';
-import type { StageValidation, OperationState, BaseOperationConfig } from '$lib/operations/types';
+import type { StageValidation, BaseOperationConfig } from '$lib/operations/types';
+
+// Definir la interfaz OperationState localmente
+interface OperationState {
+    currentStage: number;
+    data: Record<string, any>;
+    type: OperationType;
+    validation: StageValidation;
+}
 
 // Configuración de operaciones
 export const operationsConfig: BaseOperationConfig[] = [
@@ -30,15 +38,33 @@ const createOperationStore = () => {
             set({
                 currentStage: 1,
                 data: {},
-                type
+                type,
+                validation: { isValid: false, errors: [] }
             });
         },
-        updateData: (data: Record<string, any>) => {
+        updateOperationData: (data: Record<string, any>) => {
             update(state => {
                 if (!state) return state;
                 return {
                     ...state,
                     data: { ...state.data, ...data }
+                };
+            });
+        },
+        validateStage: (data: Record<string, any>) => {
+            // Implementar lógica de validación según los datos
+            const isValid = data.clientName && data.clientId;
+            return { 
+                isValid, 
+                errors: isValid ? [] : ['Datos del cliente incompletos'] 
+            };
+        },
+        updateStageValidation: (validation: StageValidation) => {
+            update(state => {
+                if (!state) return state;
+                return {
+                    ...state,
+                    validation
                 };
             });
         },
@@ -59,16 +85,10 @@ export const operationStore = createOperationStore();
 
 // Acciones de operación
 export const operationActions = {
-    startOperation: (type: OperationType) => {
-        operationStore.startOperation(type);
-    },
-    updateOperationData: (data: Record<string, any>) => {
-        operationStore.updateData(data);
-    },
-    nextStage: () => {
-        operationStore.nextStage();
-    },
-    reset: () => {
-        operationStore.reset();
-    }
+    startOperation: operationStore.startOperation,
+    updateOperationData: operationStore.updateOperationData,
+    validateStage: operationStore.validateStage,
+    updateStageValidation: operationStore.updateStageValidation,
+    nextStage: operationStore.nextStage,
+    reset: operationStore.reset
 }; 
