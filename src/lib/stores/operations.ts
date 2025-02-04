@@ -1,14 +1,33 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import type { OperationState } from '../operations/types';
 import { OperationType } from '../operations/types';
 import { OperationFactory } from '../operations/base/OperationFactory';
 
-// Store principal para el estado de las operaciones
+// Tipos de validación para los stages
+interface StageValidation {
+    isValid: boolean;
+    errors: string[];
+}
+
+// Extender OperationState para incluir validaciones
+interface OperationState {
+    currentOperation: OperationType | null;
+    isOperationInProgress: boolean;
+    currentStage: number;
+    data: Record<string, any>;
+    validation: StageValidation;
+}
+
+// Store principal actualizado
 export const operationStore = writable<OperationState>({
     currentOperation: null,
     isOperationInProgress: false,
     currentStage: 1,
-    data: {}
+    data: {},
+    validation: {
+        isValid: false,
+        errors: []
+    }
 });
 
 // Configuración de las operaciones disponibles
@@ -106,5 +125,73 @@ export const operationActions = {
             currentStage: 1,
             data: {}
         });
+    },
+
+    validateStage: (stageData: Record<string, any>): StageValidation => {
+        const currentOperation = get(operationStore).currentOperation;
+        const currentStage = get(operationStore).currentStage;
+
+        if (currentOperation === OperationType.SALE) {
+            switch (currentStage) {
+                case 1:
+                    return validateSaleStage1(stageData);
+                case 2:
+                    return validateSaleStage2(stageData);
+                case 3:
+                    return validateSaleStage3(stageData);
+                default:
+                    return { isValid: false, errors: ['Stage inválido'] };
+            }
+        }
+
+        return { isValid: false, errors: ['Operación no soportada'] };
+    },
+
+    updateStageValidation: (validation: StageValidation) => {
+        operationStore.update(state => ({
+            ...state,
+            validation
+        }));
     }
 };
+
+// Funciones de validación específicas
+function validateSaleStage1(data: Record<string, any>): StageValidation {
+    const errors: string[] = [];
+    
+    if (!data.clientName?.trim()) {
+        errors.push('El nombre del cliente es requerido');
+    }
+    if (!data.clientId?.trim()) {
+        errors.push('El ID del cliente es requerido');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+}
+
+function validateSaleStage2(data: Record<string, any>): StageValidation {
+    const errors: string[] = [];
+    
+    if (!data.amount || data.amount <= 0) {
+        errors.push('El monto debe ser mayor a 0');
+    }
+    if (!data.currency) {
+        errors.push('La moneda es requerida');
+    }
+    if (!data.clientRate || data.clientRate <= 0) {
+        errors.push('La tasa del cliente es requerida');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors
+    };
+}
+
+function validateSaleStage3(data: Record<string, any>): StageValidation {
+    // Validaciones para el stage 3 si son necesarias
+    return { isValid: true, errors: [] };
+}

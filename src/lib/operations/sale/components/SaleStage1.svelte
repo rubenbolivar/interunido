@@ -3,11 +3,15 @@
     
     let clientName = '';
     let clientId = '';
-    let error = '';
+
+    $: validation = operationActions.validateStage({ clientName, clientId });
+    $: errors = $operationStore.validation.errors;
 
     function handleNext() {
-        if (!clientName || !clientId) {
-            error = 'Por favor complete todos los campos';
+        const validation = operationActions.validateStage({ clientName, clientId });
+        operationActions.updateStageValidation(validation);
+
+        if (!validation.isValid) {
             return;
         }
 
@@ -34,7 +38,7 @@
 
         <div>
             <label for="clientId" class="block text-sm font-medium text-gray-700">
-                Identificación
+                ID del Cliente
             </label>
             <input
                 type="text"
@@ -44,20 +48,18 @@
             />
         </div>
 
-        {#if error}
-            <p class="text-red-500 text-sm">{error}</p>
+        {#if errors.length > 0}
+            <div class="text-red-500 text-sm mt-2">
+                {#each errors as error}
+                    <p>{error}</p>
+                {/each}
+            </div>
         {/if}
 
-        <div class="flex justify-between mt-6">
-            <button
-                on:click={() => operationActions.cancelOperation()}
-                class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
-            >
-                Cancelar
-            </button>
+        <div class="flex justify-end mt-6">
             <button
                 on:click={handleNext}
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
                 Siguiente
             </button>
