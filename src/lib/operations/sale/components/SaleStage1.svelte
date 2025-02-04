@@ -1,5 +1,6 @@
 <script lang="ts">
     import { operationStore, operationActions } from '$lib/stores/operations';
+    import { numberFormat, unformatNumber, formatNumber } from '$lib/utils/numberFormat';
     
     let clientName = '';
     let amountToSell = '';
@@ -9,18 +10,10 @@
 
     // Calcular el monto que recibe el cliente cuando cambian los valores
     $: {
-        const amount = parseFloat(amountToSell) || 0;
-        const rate = parseFloat(clientRate) || 0;
-        amountClientReceives = formatNumber(amount * rate, true);
-    }
-
-    function formatNumber(num: number, isBs = false): string {
-        if (typeof num !== 'number') return '';
-        const formattedNum = num.toLocaleString('de-DE', { 
-            minimumFractionDigits: 2, 
-            maximumFractionDigits: 2 
-        });
-        return isBs ? `Bs. ${formattedNum}` : formattedNum;
+        const amount = unformatNumber(amountToSell);
+        const rate = unformatNumber(clientRate);
+        const result = amount * rate;
+        amountClientReceives = !isNaN(result) ? formatNumber(result) : '';
     }
 
     function handleSubmit() {
@@ -31,10 +24,10 @@
 
         operationActions.updateOperationData({
             clientName,
-            amountToSell: parseFloat(amountToSell),
+            amountToSell: unformatNumber(amountToSell),
             currencyType,
-            clientRate: parseFloat(clientRate),
-            amountClientReceives: parseFloat(amountToSell) * parseFloat(clientRate)
+            clientRate: unformatNumber(clientRate),
+            amountClientReceives: unformatNumber(amountClientReceives)
         });
 
         operationActions.nextStage();
@@ -62,10 +55,10 @@
                 Monto que desea vender:
             </label>
             <input
-                type="number"
+                type="text"
                 id="amountToSell"
                 bind:value={amountToSell}
-                step="any"
+                use:numberFormat
                 required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
@@ -96,10 +89,10 @@
                 Tasa Cliente:
             </label>
             <input
-                type="number"
+                type="text"
                 id="clientRate"
                 bind:value={clientRate}
-                step="any"
+                use:numberFormat
                 required
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             />
